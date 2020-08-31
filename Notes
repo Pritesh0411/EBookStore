@@ -1,0 +1,80 @@
+CREATE TABLE ADMIN(
+    Admin_Id varchar(40) PRIMARY KEY NOT NULL,
+    Admin_Pass varchar(40) NOT NULL,
+    Admin_Name varchar(50) NOT NULL
+);
+
+CREATE TABLE BOOKS(
+    ISBN varchar(100) NOT NULL PRIMARY KEY,
+    BName varchar(50) NOT NULL,
+    Publisher varchar(30),
+    Price int NOT NULL,
+    Availability int NOT NULL,
+    Discount int DEFAULT 0,
+    GenreID int NOT NULL,
+    Author varchar(40),
+    Lang varchar(30),
+    Yr char(4),
+    FOREIGN KEY (GenreID) references GENRES(GenreID)
+);
+
+CREATE TABLE GENRES(
+	GenreID int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	Name varchar(30) NOT NULL UNIQUE
+);
+
+CREATE TABLE CUSTOMER(
+	EmailId varchar(80) NOT NULL PRIMARY KEY,
+	FirstName varchar(30) NOT NULL,
+	LastName varchar(30),
+	Address varchar(255),
+	MobNo int(10) NOT NULL,
+	Pass varchar(40) NOT NULL
+);
+
+CREATE TABLE ORDERS(
+    OrderId bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    ISBN varchar(100) NOT NULL,
+    EmailId varchar(80) NOT NULL,
+    Dt Date NOT NULL,
+    Quantity int NOT NULL,
+    Price int NOT NULL,
+    Stats boolean NOT NULL DEFAULT 0,
+    FOREIGN KEY (ISBN) references BOOKS(ISBN),
+    FOREIGN KEY (EmailId) references CUSTOMER(EmailId)
+);
+
+CREATE TABLE WISHLIST(
+    WishId bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    ISBN varchar(100) NOT NULL,
+    EmailId varchar(80) NOT NULL,
+    FOREIGN KEY (ISBN) references BOOKS(ISBN),
+    FOREIGN KEY (EmailId) references CUSTOMER(EmailId)
+);
+
+CREATE TABLE CART(
+    CartId bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    ISBN varchar(100) NOT NULL,
+    EmailId varchar(80) NOT NULL,
+    FOREIGN KEY (ISBN) references BOOKS(ISBN),
+    FOREIGN KEY (EmailId) references CUSTOMER(EmailId)
+);
+
+DELIMITER//
+CREATE TRIGGER `availCheck` AFTER INSERT ON `orders`
+ FOR EACH ROW BEGIN
+    UPDATE books
+    SET Availability=Availability-1
+    WHERE ISBN=new.ISBN;
+END//
+DELIMITER ;
+
+DELIMITER//
+CREATE TRIGGER `Avaizero` AFTER UPDATE ON `books`
+ FOR EACH ROW BEGIN
+    IF(new.availability=0) THEN
+    DELETE FROM cart
+    WHERE ISBN=new.ISBN;
+    END IF;
+END//
+DELIMITER ;
